@@ -12,15 +12,17 @@ Wickr encryption context for high level management of sending / receiving packet
 \subsection*{Data Fields}
 \begin{DoxyCompactItemize}
 \item 
-\hyperlink{structwickr__crypto__engine}{wickr\+\_\+crypto\+\_\+engine\+\_\+t} \hyperlink{structwickr__ctx_a244c238ad74f2dbcddc280822d1fb93f}{engine}
+\mbox{\hyperlink{structwickr__crypto__engine}{wickr\+\_\+crypto\+\_\+engine\+\_\+t}} \mbox{\hyperlink{structwickr__ctx_a244c238ad74f2dbcddc280822d1fb93f}{engine}}
 \item 
-\hyperlink{structwickr__dev__info}{wickr\+\_\+dev\+\_\+info\+\_\+t} $\ast$ \hyperlink{structwickr__ctx_a043ea3b027c4d27909f77bb195550b11}{dev\+\_\+info}
+\mbox{\hyperlink{structwickr__dev__info}{wickr\+\_\+dev\+\_\+info\+\_\+t}} $\ast$ \mbox{\hyperlink{structwickr__ctx_a043ea3b027c4d27909f77bb195550b11}{dev\+\_\+info}}
 \item 
-\hyperlink{structwickr__identity__chain}{wickr\+\_\+identity\+\_\+chain\+\_\+t} $\ast$ \hyperlink{structwickr__ctx_a044a292ab5cbba50fd3ec2f5bf7a00ef}{id\+\_\+chain}
+\mbox{\hyperlink{structwickr__identity__chain}{wickr\+\_\+identity\+\_\+chain\+\_\+t}} $\ast$ \mbox{\hyperlink{structwickr__ctx_a044a292ab5cbba50fd3ec2f5bf7a00ef}{id\+\_\+chain}}
 \item 
-\hyperlink{structwickr__storage__keys}{wickr\+\_\+storage\+\_\+keys\+\_\+t} $\ast$ \hyperlink{structwickr__ctx_ab6d3ad69a6a16c0f582186b9d8461b66}{storage\+\_\+keys}
+\mbox{\hyperlink{structwickr__storage__keys}{wickr\+\_\+storage\+\_\+keys\+\_\+t}} $\ast$ \mbox{\hyperlink{structwickr__ctx_ab6d3ad69a6a16c0f582186b9d8461b66}{storage\+\_\+keys}}
 \item 
-\hyperlink{structwickr__cipher__key}{wickr\+\_\+cipher\+\_\+key\+\_\+t} $\ast$ \hyperlink{structwickr__ctx_a86da8359c914b1fec0d60e1c64fcf048}{packet\+\_\+header\+\_\+key}
+\mbox{\hyperlink{structwickr__cipher__key}{wickr\+\_\+cipher\+\_\+key\+\_\+t}} $\ast$ \mbox{\hyperlink{structwickr__ctx_a86da8359c914b1fec0d60e1c64fcf048}{packet\+\_\+header\+\_\+key}}
+\item 
+uint8\+\_\+t \mbox{\hyperlink{structwickr__ctx_ad43117fbe3f70681f0ab982b06c6cd75}{pkt\+\_\+enc\+\_\+version}}
 \end{DoxyCompactItemize}
 
 
@@ -52,7 +54,13 @@ the identity chain for this context, it contains the node and root level signatu
 \subsubsection{\texorpdfstring{packet\+\_\+header\+\_\+key}{packet\_header\_key}}
 {\footnotesize\ttfamily wickr\+\_\+ctx\+::packet\+\_\+header\+\_\+key}
 
-the active header key to use on all outbound packets \mbox{\Hypertarget{structwickr__ctx_ab6d3ad69a6a16c0f582186b9d8461b66}\label{structwickr__ctx_ab6d3ad69a6a16c0f582186b9d8461b66}} 
+the active header key to use on all outbound packets \mbox{\Hypertarget{structwickr__ctx_ad43117fbe3f70681f0ab982b06c6cd75}\label{structwickr__ctx_ad43117fbe3f70681f0ab982b06c6cd75}} 
+\index{wickr\+\_\+ctx@{wickr\+\_\+ctx}!pkt\+\_\+enc\+\_\+version@{pkt\+\_\+enc\+\_\+version}}
+\index{pkt\+\_\+enc\+\_\+version@{pkt\+\_\+enc\+\_\+version}!wickr\+\_\+ctx@{wickr\+\_\+ctx}}
+\subsubsection{\texorpdfstring{pkt\+\_\+enc\+\_\+version}{pkt\_enc\_version}}
+{\footnotesize\ttfamily wickr\+\_\+ctx\+::pkt\+\_\+enc\+\_\+version}
+
+the packet version to use for encoding, this is useful for supporting older clients \mbox{\Hypertarget{structwickr__ctx_ab6d3ad69a6a16c0f582186b9d8461b66}\label{structwickr__ctx_ab6d3ad69a6a16c0f582186b9d8461b66}} 
 \index{wickr\+\_\+ctx@{wickr\+\_\+ctx}!storage\+\_\+keys@{storage\+\_\+keys}}
 \index{storage\+\_\+keys@{storage\+\_\+keys}!wickr\+\_\+ctx@{wickr\+\_\+ctx}}
 \subsubsection{\texorpdfstring{storage\+\_\+keys}{storage\_keys}}
@@ -62,4 +70,4 @@ active remote and local storage keys for this context
 
 The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
 \item 
-src/crypto/wickr\+\_\+ctx.\+h\end{DoxyCompactItemize}
+src/wickrcrypto/include/wickrcrypto/wickr\+\_\+ctx.\+h\end{DoxyCompactItemize}

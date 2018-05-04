@@ -1,0 +1,27 @@
+os: Visual Studio 2015
+
+install:
+  - set CMAKE_URL="https://cmake.org/files/v3.9/cmake-3.9.0-win32-x86.zip"
+  - appveyor DownloadFile %CMAKE_URL% -FileName cmake.zip
+  - 7z x cmake.zip -oC:\projects\deps\cmake > nul
+  - set PATH=C:\projects\deps\cmake\bin;%PATH%
+  - cmake --version
+  - git submodule update --init --recursive 
+
+  # install NASM
+  - cd \
+  - appveyor DownloadFile "http://www.nasm.us/pub/nasm/releasebuilds/2.12.01/win32/nasm-2.12.01-win32.zip" -FileName "c:\nasm.zip"
+  - 7z x "nasm.zip" > nul
+  - move nasm-* NASM
+  - set PATH=%PATH%;c:\NASM;
+  - nasm -v
+
+build_script:
+  - cd %APPVEYOR_BUILD_FOLDER%
+  - rm -rf build
+  - mkdir build
+  - cd build
+  - cmake -DBUILD_OPENSSL=true -DBUILD_TESTS=true -G "Visual Studio 14 2015" ..
+  - msbuild WickrCryptoC.sln /p:Configuration=Release
+  - cd test\Release
+  - crypto_test.exe --ci

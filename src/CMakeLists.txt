@@ -1,12 +1,3 @@
-include_directories("crypto")
+include_directories("wickrcrypto")
 
-add_subdirectory(crypto)
-
-if (NOT ANDROID)
-    add_subdirectory(test)
-endif()
-
-#if (UNIX AND NOT APPLE AND NOT ANDROID)
-#    message("Including bindings directory!")
-#    add_subdirectory(bindings)
-#endif()
+add_subdirectory(wickrcrypto)

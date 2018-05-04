@@ -14,7 +14,7 @@ var searchData=
   ['wickr_5fdigest',['wickr_digest',['../structwickr__digest.html',1,'']]],
   ['wickr_5fec_5fcurve',['wickr_ec_curve',['../structwickr__ec__curve.html',1,'']]],
   ['wickr_5fec_5fkey',['wickr_ec_key',['../structwickr__ec__key.html',1,'']]],
-  ['wickr_5fecdh_5fparams',['wickr_ecdh_params',['../structwickr__ecdh__params.html',1,'']]],
+  ['wickr_5fecdh_5fcipher_5fctx',['wickr_ecdh_cipher_ctx',['../structwickr__ecdh__cipher__ctx.html',1,'']]],
   ['wickr_5fecdsa_5fresult',['wickr_ecdsa_result',['../structwickr__ecdsa__result.html',1,'']]],
   ['wickr_5fephemeral_5finfo',['wickr_ephemeral_info',['../structwickr__ephemeral__info.html',1,'']]],
   ['wickr_5fephemeral_5fkeypair',['wickr_ephemeral_keypair',['../structwickr__ephemeral__keypair.html',1,'']]],
@@ -24,12 +24,17 @@ var searchData=
   ['wickr_5fkdf_5fmeta',['wickr_kdf_meta',['../structwickr__kdf__meta.html',1,'']]],
   ['wickr_5fkdf_5fresult',['wickr_kdf_result',['../structwickr__kdf__result.html',1,'']]],
   ['wickr_5fkey_5fexchange',['wickr_key_exchange',['../structwickr__key__exchange.html',1,'']]],
+  ['wickr_5fkey_5fexchange_5fset',['wickr_key_exchange_set',['../structwickr__key__exchange__set.html',1,'']]],
   ['wickr_5fnode',['wickr_node',['../structwickr__node.html',1,'']]],
   ['wickr_5fpacket',['wickr_packet',['../structwickr__packet.html',1,'']]],
-  ['wickr_5fpacket_5fheader',['wickr_packet_header',['../structwickr__packet__header.html',1,'']]],
   ['wickr_5fpacket_5fmeta',['wickr_packet_meta',['../structwickr__packet__meta.html',1,'']]],
   ['wickr_5fparse_5fresult',['wickr_parse_result',['../structwickr__parse__result.html',1,'']]],
   ['wickr_5fpayload',['wickr_payload',['../structwickr__payload.html',1,'']]],
   ['wickr_5froot_5fkeys',['wickr_root_keys',['../structwickr__root__keys.html',1,'']]],
-  ['wickr_5fstorage_5fkeys',['wickr_storage_keys',['../structwickr__storage__keys.html',1,'']]]
+  ['wickr_5fstorage_5fkeys',['wickr_storage_keys',['../structwickr__storage__keys.html',1,'']]],
+  ['wickr_5fstream_5fctx',['wickr_stream_ctx',['../structwickr__stream__ctx.html',1,'']]],
+  ['wickr_5fstream_5fiv',['wickr_stream_iv',['../structwickr__stream__iv.html',1,'']]],
+  ['wickr_5fstream_5fkey',['wickr_stream_key',['../structwickr__stream__key.html',1,'']]],
+  ['wickr_5ftransport_5fcallbacks',['wickr_transport_callbacks',['../structwickr__transport__callbacks.html',1,'']]],
+  ['wickr_5ftransport_5fctx',['wickr_transport_ctx',['../structwickr__transport__ctx.html',1,'']]]
 ];
