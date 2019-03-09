@@ -86,15 +86,15 @@ if [ -z "$ANDROID_TOOLCHAIN" ] || [ ! -d "$ANDROID_TOOLCHAIN" ]; then
 fi
 
 case $_ANDROID_ARCH in
-	arch-arm)	  
+    arch-arm)     
       ANDROID_TOOLS="arm-linux-androideabi-gcc arm-linux-androideabi-ranlib arm-linux-androideabi-ld"
-	  ;;
-	arch-x86)	  
+      ;;
+    arch-x86)     
       ANDROID_TOOLS="i686-linux-android-gcc i686-linux-android-ranlib i686-linux-android-ld"
-	  ;;	  
-	*)
-	  echo "ERROR ERROR ERROR"
-	  ;;
+      ;;      
+    *)
+      echo "ERROR ERROR ERROR"
+      ;;
 esac
 
 for tool in $ANDROID_TOOLS
@@ -138,11 +138,15 @@ export ARCH=arm
 export CROSS_COMPILE="arm-linux-androideabi-"
 
 if [ "$_ANDROID_ARCH" == "arch-x86" ]; then
-	export MACHINE=i686
-	export RELEASE=2.6.37
-	export SYSTEM=android
-	export ARCH=x86
-	export CROSS_COMPILE="i686-linux-android-"
+    export MACHINE=i686
+    export RELEASE=2.6.37
+    export SYSTEM=android
+    export ARCH=x86
+    export CROSS_COMPILE="i686-linux-android-"
+fi
+
+if [ ! -z ${FIPS} ]; then
+    export FIPS_SIG=${FIPS}
 fi
 
 # For the Android toolchain
@@ -178,6 +182,7 @@ if [ ! -z "$VERBOSE" ] && [ "$VERBOSE" != "0" ]; then
   echo "SYSROOT: $SYSROOT"
   echo "CROSS_SYSROOT: $CROSS_SYSROOT"
   echo "NDK_SYSROOT: $NDK_SYSROOT"
+  echo "FIPS PATH: ${FIPS_SIG}"
 fi
 
 echo "PATH: ${PATH}"

@@ -1,0 +1,38 @@
+{
+    "name": "wickrcrypto",
+    "dependencies": {
+        "node-pre-gyp": "^0.10.0"
+    },
+    "bundledDependencies": [
+        "node-pre-gyp"
+    ],
+    "devDependencies": {
+        "expect.js": "0.3.1",
+        "mocha": "5.1.x",
+        "aws-sdk": "^2.249.1"
+    },
+    "description": "A node.js wrapper around the wickr-crypto-c library",
+    "version": "1.11.0",
+    "main": "node/lib/wickrcrypto.node",
+    "scripts": {
+        "install": "node-pre-gyp install 2> /dev/null || ./node_install.sh",
+        "test": "./node_modules/.bin/mocha src/wickrcrypto/swig/node/test"
+    },
+    "binary": {
+        "module_name": "lib/wickrcrypto",
+        "module_path": "./node",
+        "host": "https://wickr-crypto-c.s3.amazonaws.com/wickr-crypto-c"
+    },
+    "engines": {
+        "node": ">=8"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/WickrInc/wickr-crypto-c.git"
+    },
+    "author": "Tom Leavy",
+    "contributors": [
+        "Tom Leavy <tom@wickr.com>"
+    ],
+    "license": "SEE LICENSE IN LICENSE"
+}

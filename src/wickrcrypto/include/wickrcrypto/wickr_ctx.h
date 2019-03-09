@@ -305,6 +305,57 @@ wickr_ctx_t *wickr_ctx_copy(const wickr_ctx_t *ctx);
  @param ctx a pointer to the context to destroy. All properties of '*ctx' will also be destroyed
  */
 void wickr_ctx_destroy(wickr_ctx_t **ctx);
+    
+/**
+ 
+ @ingroup wickr_ctx
+ 
+ Serialize a context
+ 
+ @param ctx the context to serialize to bytes
+ @return bytes representing a combination of the storage keys and id chain from 'ctx'
+ */
+wickr_buffer_t *wickr_ctx_serialize(const wickr_ctx_t *ctx);
+    
+/**
+ 
+ @ingroup wickr_ctx
+ 
+ Recreate a context from a serizlied representation
+ 
+ @param engine a crypto engine to support context operations
+ @param dev_info the device information the context should be bound to
+ @param buffer data created with 'wickr_ctx_serialize'
+ @return a context restored from 'buffer' or NULL if parsing fails
+ */
+wickr_ctx_t *wickr_ctx_create_from_buffer(const wickr_crypto_engine_t engine,
+                                          wickr_dev_info_t *dev_info,
+                                          const wickr_buffer_t *buffer);
+
+/**
+ @ingroup wickr_ctx
+ 
+ Serialize and encrypt a context with a passphrase
+ 
+ @param ctx the context to serialize and encrypt
+ @return bytes representing an scrypt encrypted context
+ */
+wickr_buffer_t *wickr_ctx_export(const wickr_ctx_t *ctx, const wickr_buffer_t *passphrase);
+    
+/**
+ @ingroup wickr_ctx
+ 
+ Import a ctx exported by 'wickr_ctx_export'
+ 
+ @param engine the crypto engine to use for decryption and the resulting context
+ @param dev_info the device information the context should be bound to
+ @param exported the result of the call to 'wickr_ctx_export'
+ @param passphase the passphrase used to export the context
+*/
+wickr_ctx_t *wickr_ctx_import(const wickr_crypto_engine_t engine,
+                              wickr_dev_info_t *dev_info,
+                              const wickr_buffer_t *exported,
+                              const wickr_buffer_t *passphrase);
 
 /**
  @ingroup wickr_ctx

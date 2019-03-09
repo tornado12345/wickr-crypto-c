@@ -21,6 +21,8 @@
 
 ARCHS=$1
 
+export FIPS_SIG=${FIPSDIR}/openssl_fips-prefix/src/openssl_fips/iOS/incore_macho
+
 DEVELOPER=$(xcode-select -print-path)
 if [ ! -d "${DEVELOPER}" ]; then
   echo "Xcode path is not set correctly ${DEVELOPER} does not exist"
@@ -106,13 +108,13 @@ do
   fi
 
   # Add --openssldir option
-  LOCAL_CONFIG_OPTIONS="--openssldir=${TARGETDIR}/${ARCH} ${LOCAL_CONFIG_OPTIONS}"
+  LOCAL_CONFIG_OPTIONS="--openssldir=${TARGETDIR}/${ARCH} --with-fipsdir=${FIPSDIR}/${ARCH} ${LOCAL_CONFIG_OPTIONS}"
 
   # Determine configure target
   if [ "${ARCH}" == "x86_64" ]; then
-    LOCAL_CONFIG_OPTIONS="darwin64-x86_64-cc no-asm ${LOCAL_CONFIG_OPTIONS}"
+    LOCAL_CONFIG_OPTIONS="fips darwin64-x86_64-cc no-asm ${LOCAL_CONFIG_OPTIONS}"
   else
-    LOCAL_CONFIG_OPTIONS="iphoneos-cross ${LOCAL_CONFIG_OPTIONS}"
+    LOCAL_CONFIG_OPTIONS="fips iphoneos-cross ${LOCAL_CONFIG_OPTIONS}"
   fi
 
   # Run Configure
@@ -140,7 +142,7 @@ do
 
   # Keep reference to first build target for include file
   if [ -z "${INCLUDE_DIR}" ]; then
-    INCLUDE_DIR="${TARGETDIR}/${ARCH}/include"
+    INCLUDE_DIR="${TARGETDIR}/${ARCH}/include/openssl"
   fi
 
   LIBCRYPTO_IOS+=("${TARGETDIR}/${ARCH}/lib/libcrypto.a")
@@ -148,9 +150,9 @@ do
   make distclean
 done
 
-cp -R ${INCLUDE_DIR} ${TARGETDIR}/include
+rm -rf ${TARGETDIR}/include/openssl
+cp -R ${INCLUDE_DIR} ${TARGETDIR}/include/openssl
 
-mkdir ${TARGETDIR}/lib
+mkdir -p ${TARGETDIR}/lib
 lipo -create ${LIBCRYPTO_IOS[@]} -output "${TARGETDIR}/lib/libcrypto.a"
-
 

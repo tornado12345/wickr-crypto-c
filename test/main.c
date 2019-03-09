@@ -19,6 +19,10 @@
 #include "test_key_exchange.h"
 #include "test_ecdh_cipher.h"
 #include "test_protocol_version.h"
+#include "test_storage_keys.h"
+#include "test_b32.h"
+#include "test_fingerprint.h"
+#include "test_ec_key.h"
 
 #include "cspec_output_unit.h"
 
@@ -28,21 +32,27 @@ void run_primitive_tests(CSpecOutputStruct *output)
 {
     CSpec_Run(DESCRIPTION(wickr_buffer_tests), output);
     CSpec_Run(DESCRIPTION(node_tests), output);
+    CSpec_Run(DESCRIPTION(wickr_fingerprint), output);
+    CSpec_Run(DESCRIPTION(wickr_fingerprint_generation), output);
+    CSpec_Run(DESCRIPTION(wickr_fingerprint_bilateral_generation), output);
     CSpec_Run(DESCRIPTION(identity), output);
     CSpec_Run(DESCRIPTION(identity_chain), output);
     CSpec_Run(DESCRIPTION(ephemeral_keypair), output);
     CSpec_Run(DESCRIPTION(an_array_of_items), output);
     CSpec_Run(DESCRIPTION(a_zero_length_array), output);
+    CSpec_Run(DESCRIPTION(wickr_ec_key), output);
     CSpec_Run(DESCRIPTION(cipher_result), output);
     CSpec_Run(DESCRIPTION(getBase64FromData), output);
     CSpec_Run(DESCRIPTION(getDataFromBase64), output);
     CSpec_Run(DESCRIPTION(getHexStringFromData), output);
     CSpec_Run(DESCRIPTION(getDataFromHexString), output);
+    CSpec_Run(DESCRIPTION(base32_encode), output);
     CSpec_Run(DESCRIPTION(wickr_kdf_meta), output);
     CSpec_Run(DESCRIPTION(wickr_kdf_result), output);
     CSpec_Run(DESCRIPTION(packet_meta), output);
     CSpec_Run(DESCRIPTION(key_exchange), output);
     CSpec_Run(DESCRIPTION(key_exchange_set), output);
+    CSpec_Run(DESCRIPTION(wickr_storage_keys), output);
 }
 
 void run_crypto_engine_tests(CSpecOutputStruct *output)

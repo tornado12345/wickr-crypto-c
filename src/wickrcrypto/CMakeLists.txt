@@ -5,6 +5,12 @@ file(GLOB Sources src/*.c include/wickrcrypto/*.h include/wickrcrypto/private/*.
 
 include_directories("include/wickrcrypto" "../protobuf/gen" "${THIRD_PARTY}/protobuf-c" "${THIRD_PARTY}/crypt_blowfish" "${THIRD_PARTY}/libscrypt" "${OPENSSL_INCLUDE_DIR}")
 
+# Enable FIPS if needed
+if (${FIPS})
+    message(STATUS "Enabling FIPS")
+    add_definitions(-DFIPS)
+endif ()
+
 add_library(wickrcrypto ${Sources} ${ProtobufSources})
 
 add_dependencies(wickrcrypto bcrypt scrypt protobuf-c)
@@ -27,3 +33,12 @@ file(GLOB Headers include/wickrcrypto/*.h)
 install(FILES ${Headers} DESTINATION include/wickrcrypto)
 
 export(TARGETS wickrcrypto FILE WickrCryptoConfig.cmake)
+
+# SWIG OPTIONS
+
+option(BUILD_NODE "Build Node SWIG module" OFF)
+option(BUILD_JAVA "Build Java SWIG module" OFF)
+
+if (BUILD_NODE OR BUILD_JAVA OR BUILD_PHP)
+    add_subdirectory(swig)
+endif ()

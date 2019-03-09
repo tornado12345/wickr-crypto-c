@@ -89,10 +89,62 @@ DESCRIBE(identity, "identity tests")
         
         SHOULD_BE_TRUE(wickr_buffer_is_equal(identity->identifier, test_identity->identifier, NULL));
         SHOULD_BE_TRUE(wickr_buffer_is_equal(identity->sig_key->pub_data, test_identity->sig_key->pub_data, NULL));
+        SHOULD_BE_NULL(identity->sig_key->pri_data);
+        
         SHOULD_EQUAL(identity->type, test_identity->type);
         
         wickr_buffer_destroy(&serialized);
         wickr_identity_destroy(&identity);
+    }
+    END_IT
+    
+    IT("has a fingerprint")
+    {
+        SHOULD_BE_NULL(wickr_identity_get_fingerprint(NULL, engine));
+
+        wickr_fingerprint_t *fingerprint = wickr_identity_get_fingerprint(test_identity, engine);
+        SHOULD_NOT_BE_NULL(fingerprint);
+        
+        wickr_fingerprint_t *manual_fingerprint = wickr_fingerprint_gen(engine, test_identity->sig_key,
+                                                                        test_identity->identifier,
+                                                                        WICKR_FINGERPRINT_TYPE_SHA512);
+        
+        SHOULD_NOT_BE_NULL(manual_fingerprint);
+        
+        SHOULD_BE_TRUE(wickr_buffer_is_equal(manual_fingerprint->data, fingerprint->data, NULL));
+        
+        wickr_fingerprint_destroy(&fingerprint);
+        wickr_fingerprint_destroy(&manual_fingerprint);
+    }
+    END_IT
+    
+    IT("can make a bilateral fingerprint with another identity")
+    {
+        wickr_buffer_t *test_identifier = engine.wickr_crypto_engine_crypto_random(32);
+        wickr_ec_key_t *test_sig_key = engine.wickr_crypto_engine_ec_rand_key(EC_CURVE_NIST_P521);
+        wickr_identity_t *test_identity_b = wickr_identity_create(IDENTITY_TYPE_ROOT, test_identifier, test_sig_key, NULL);
+        
+        wickr_fingerprint_t *fingerprint = wickr_identity_get_bilateral_fingerprint(test_identity, test_identity_b, engine);
+        
+        SHOULD_NOT_BE_NULL(fingerprint);
+        
+        wickr_fingerprint_t *manual_a = wickr_fingerprint_gen(engine, test_identity->sig_key,
+                                                              test_identity->identifier, WICKR_FINGERPRINT_TYPE_SHA512);
+        
+        wickr_fingerprint_t *manual_b = wickr_fingerprint_gen(engine, test_identity_b->sig_key,
+                                                              test_identity_b->identifier, WICKR_FINGERPRINT_TYPE_SHA512);
+        
+        wickr_fingerprint_t *manual = wickr_fingerprint_gen_bilateral(engine, manual_a,
+                                                                      manual_b, WICKR_FINGERPRINT_TYPE_SHA512);
+        
+        SHOULD_NOT_BE_NULL(manual);
+        SHOULD_BE_TRUE(wickr_buffer_is_equal(manual->data, fingerprint->data, NULL));
+        
+        wickr_fingerprint_destroy(&manual_a);
+        wickr_fingerprint_destroy(&manual_b);
+        wickr_fingerprint_destroy(&manual);
+        wickr_identity_destroy(&test_identity_b);
+        wickr_fingerprint_destroy(&fingerprint);
     }
     END_IT
     
@@ -155,11 +207,13 @@ DESCRIBE(identity_chain, "identity chain tests")
         
         SHOULD_BE_TRUE(wickr_buffer_is_equal(deserialized->root->identifier, test_chain->root->identifier, NULL));
         SHOULD_BE_TRUE(wickr_buffer_is_equal(deserialized->root->sig_key->pub_data, test_chain->root->sig_key->pub_data, NULL));
+        SHOULD_BE_NULL(deserialized->root->sig_key->pri_data);
         SHOULD_EQUAL(deserialized->root->type, test_chain->root->type);
         
         SHOULD_BE_TRUE(wickr_buffer_is_equal(deserialized->node->identifier, test_chain->node->identifier, NULL));
         SHOULD_BE_TRUE(wickr_buffer_is_equal(deserialized->node->sig_key->pub_data, test_chain->node->sig_key->pub_data, NULL));
         SHOULD_BE_TRUE(wickr_buffer_is_equal(deserialized->node->signature->sig_data, test_chain->node->signature->sig_data, NULL));
+        SHOULD_BE_NULL(deserialized->node->sig_key->pri_data);
         SHOULD_EQUAL(deserialized->node->type, test_chain->node->type);
         
         wickr_buffer_destroy(&serialized);
