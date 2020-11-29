@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2018 Wickr Inc.  All rights reserved.
+ * Copyright © 2012-2020 Wickr Inc.  All rights reserved.
  *
  * This code is being released for EDUCATIONAL, ACADEMIC, AND CODE REVIEW PURPOSES
  * ONLY.  COMMERCIAL USE OF THE CODE IS EXPRESSLY PROHIBITED.  For additional details,
@@ -46,6 +46,23 @@ typedef wickr_array_t wickr_node_array_t;
 /**
  
  @ingroup wickr_node
+ 
+ Node status
+ 
+ UNKNOWN - Signature validation has never been attempted on the node
+ VALID - Signature validation has been attempted and has passed on node
+ INVALID - Signature validation has been attempted and has failed on node
+ 
+ */
+typedef enum {
+    NODE_STATUS_UNKNOWN,
+    NODE_STATUS_VALID,
+    NODE_STATUS_INVALID
+} wickr_node_status;
+    
+/**
+ 
+ @ingroup wickr_node
  @struct wickr_node
  
  @brief Represents a message destination at a point in time
@@ -62,12 +79,17 @@ typedef wickr_array_t wickr_node_array_t;
  the current identity chain of the node, representing its root->node relationship hirearchy
  @var wickr_node::ephemeral_keypair 
  the key pair that is currently associated with message key exchange generation for this node
- 
+ @var wickr_node::status
+ the current validation status of the node, see 'wickr_node_status' for more info
+ @var wickr_node::_status_cache
+ private cache of status information used for performance optimizations
  */
 struct wickr_node {
     wickr_buffer_t *dev_id;
     wickr_identity_chain_t *id_chain;
     wickr_ephemeral_keypair_t *ephemeral_keypair;
+    wickr_node_status status;
+    wickr_buffer_t *_status_cache;
 };
 
 typedef struct wickr_node wickr_node_t;

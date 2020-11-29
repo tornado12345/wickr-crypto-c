@@ -12,7 +12,7 @@
 #include "test_node.h"
 #include "test_buffer.h"
 #include "test_stream_cipher.h"
-#include "test_transport.h"
+#include "test_transport_ctx.h"
 #include "test_identity.h"
 #include "test_ephemeral_keypair.h"
 #include "test_packet_meta.h"
@@ -23,6 +23,16 @@
 #include "test_b32.h"
 #include "test_fingerprint.h"
 #include "test_ec_key.h"
+#include "test_encoder_result.h"
+#include "test_payload.h"
+#include "test_transport_packet.h"
+#include "test_transport_handshake.h"
+#include "test_transport_root_key.h"
+#include "openssl_suite.h"
+
+#ifdef FIPS
+#include "private/openssl_threads.h"
+#endif
 
 #include "cspec_output_unit.h"
 
@@ -71,6 +81,9 @@ void run_crypto_engine_tests(CSpecOutputStruct *output)
     CSpec_Run(DESCRIPTION(openssl_ecdh), output);
     CSpec_Run(DESCRIPTION(openssl_hmac), output);
     CSpec_Run(DESCRIPTION(openssl_hkdf), output);
+#ifdef FIPS
+    CSpec_Run(DESCRIPTION(openssl_fips), output);
+#endif
 }
 
 void run_stream_tests(CSpecOutputStruct *output)
@@ -88,6 +101,11 @@ void run_ecdh_cipher_tests(CSpecOutputStruct *output)
 
 void run_transport_tests(CSpecOutputStruct *output)
 {
+    CSpec_Run(DESCRIPTION(wickr_transport_root_key), output);
+    CSpec_Run(DESCRIPTION(wickr_transport_packet_meta), output);
+    CSpec_Run(DESCRIPTION(wickr_transport_packet), output);
+    CSpec_Run(DESCRIPTION(wickr_transport_handshake), output);
+    CSpec_Run(DESCRIPTION(wickr_transport_handshake_res), output);
     CSpec_Run(DESCRIPTION(wickr_transport_ctx), output);
 }
 
@@ -95,6 +113,8 @@ void run_messaging_protocol_tests(CSpecOutputStruct *output)
 {
     CSpec_Run(DESCRIPTION(wickr_protocol_key_exchanges), output);
     CSpec_Run(DESCRIPTION(wickr_packet_create_from_components), output);
+    CSpec_Run(DESCRIPTION(wickr_encoder_result), output);
+    CSpec_Run(DESCRIPTION(wickr_payload), output);
     CSpec_Run(DESCRIPTION(protocol_support_regression_tests), output);
 }
 
@@ -131,6 +151,10 @@ int main(int argc, char *argv[])
     run_messaging_protocol_tests(output);
     run_context_api_tests(output);
     run_kdf_tests(output);
+    
+#ifdef FIPS
+    openssl_thread_cleanup();
+#endif
     
     return output->failed;
 }

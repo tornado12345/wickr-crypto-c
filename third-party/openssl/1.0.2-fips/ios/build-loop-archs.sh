@@ -21,7 +21,7 @@
 
 ARCHS=$1
 
-export FIPS_SIG=${FIPSDIR}/openssl_fips-prefix/src/openssl_fips/iOS/incore_macho
+export FIPS_SIG=${FIPSDIR}/iOS/incore_macho
 
 DEVELOPER=$(xcode-select -print-path)
 if [ ! -d "${DEVELOPER}" ]; then
@@ -77,7 +77,7 @@ do
 
   case "${ARCH}" in
     *armv7*)
-      if [ -z "${APPLIED_PATCH}" ]; then
+      if [ -z ${APPLIED_PATCH} ]; then
           patch -p3 < "${SOURCEDIR}/armv7-frame-pointer-xcode9.patch" Configure
           APPLIED_PATCH=true
       fi
@@ -107,6 +107,10 @@ do
     LOCAL_CONFIG_OPTIONS="${LOCAL_CONFIG_OPTIONS} -miphoneos-version-min=${IOS_MIN_SDK_VERSION}"
   fi
 
+  if [[ "${PLATFORM}" == iPhoneSimulator ]]; then
+    LOCAL_CONFIG_OPTIONS="${LOCAL_CONFIG_OPTIONS} no-engine no-apps"
+  fi
+
   # Add --openssldir option
   LOCAL_CONFIG_OPTIONS="--openssldir=${TARGETDIR}/${ARCH} --with-fipsdir=${FIPSDIR}/${ARCH} ${LOCAL_CONFIG_OPTIONS}"
 
@@ -118,6 +122,7 @@ do
   fi
 
   # Run Configure
+  export COMMAND_MODE=unix2003
   ./Configure ${LOCAL_CONFIG_OPTIONS}
 
   # Only required for Darwin64 builds (-isysroot is automatically added by iphoneos-cross target)
@@ -129,11 +134,13 @@ do
   # Run make depend if relevant
   if [[ ! -z "${CONFIG_OPTIONS}" ]]; then
     echo "  Make depend...\c"
+    export COMMAND_MODE=unix2003
     make depend
   fi
 
   # Run make
   BUILD_THREADS=$(sysctl hw.ncpu | awk '{print $2}')
+  export COMMAND_MODE=unix2003
   make -j ${BUILD_THREADS}
 
   # Run make install
@@ -146,13 +153,17 @@ do
   fi
 
   LIBCRYPTO_IOS+=("${TARGETDIR}/${ARCH}/lib/libcrypto.a")
+  LIBSSL_IOS+=("${TARGETDIR}/${ARCH}/lib/libssl.a")
 
   make distclean
 done
 
 rm -rf ${TARGETDIR}/include/openssl
-cp -R ${INCLUDE_DIR} ${TARGETDIR}/include/openssl
+
+echo "COPYING ${INCLUDE_DIR} to ${TARGETDIR}"
+mkdir -p ${TARGETDIR}/include
+cp -R ${INCLUDE_DIR} ${TARGETDIR}/include
 
 mkdir -p ${TARGETDIR}/lib
 lipo -create ${LIBCRYPTO_IOS[@]} -output "${TARGETDIR}/lib/libcrypto.a"
-
+lipo -create ${LIBSSL_IOS[@]} -output "${TARGETDIR}/lib/libssl.a"

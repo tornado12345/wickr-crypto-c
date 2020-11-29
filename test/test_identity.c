@@ -40,15 +40,29 @@ DESCRIBE(identity, "identity tests")
     }
     END_IT
     
-    IT("can generate a node identity as a root identity")
+    IT("can generate a node identity from a root identity")
     {
-        wickr_identity_t *node_id = wickr_node_identity_gen(&engine, test_identity);
+        wickr_identity_t *node_id = wickr_node_identity_gen(&engine, test_identity, NULL);
         SHOULD_NOT_BE_NULL(node_id);
         SHOULD_EQUAL(node_id->type, IDENTITY_TYPE_NODE);
         SHOULD_NOT_BE_NULL(node_id->signature);
         SHOULD_BE_FALSE(wickr_buffer_is_equal(node_id->identifier, test_identity->identifier, NULL));
         SHOULD_BE_FALSE(wickr_buffer_is_equal(node_id->sig_key->pub_data, test_identity->sig_key->pub_data, NULL));
         wickr_identity_destroy(&node_id);
+    }
+    END_IT
+    
+    IT("can generate a node identity from a root identity and supply an identifier")
+    {
+        wickr_buffer_t *node_identifier = engine.wickr_crypto_engine_crypto_random(32);
+        wickr_identity_t *node_id = wickr_node_identity_gen(&engine, test_identity, node_identifier);
+        SHOULD_NOT_BE_NULL(node_id);
+        SHOULD_EQUAL(node_id->type, IDENTITY_TYPE_NODE);
+        SHOULD_NOT_BE_NULL(node_id->signature);
+        SHOULD_BE_TRUE(wickr_buffer_is_equal(node_id->identifier, node_identifier, NULL));
+        SHOULD_BE_FALSE(wickr_buffer_is_equal(node_id->sig_key->pub_data, test_identity->sig_key->pub_data, NULL));
+        wickr_identity_destroy(&node_id);
+        wickr_buffer_destroy(&node_identifier);
     }
     END_IT
     
@@ -164,7 +178,7 @@ DESCRIBE(identity_chain, "identity chain tests")
         wickr_ec_key_t *sig_key = engine.wickr_crypto_engine_ec_rand_key(EC_CURVE_NIST_P521);
 
         wickr_identity_t *test_root = wickr_identity_create(IDENTITY_TYPE_ROOT, identifier, sig_key, NULL);
-        wickr_identity_t *test_node = wickr_node_identity_gen(&engine, test_root);
+        wickr_identity_t *test_node = wickr_node_identity_gen(&engine, test_root, NULL);
         
         SHOULD_BE_NULL(wickr_identity_chain_create(NULL, NULL));
         SHOULD_BE_NULL(wickr_identity_chain_create(test_root, NULL));
@@ -221,10 +235,55 @@ DESCRIBE(identity_chain, "identity chain tests")
     }
     END_IT
     
+    IT("can be serialized and include private data")
+    {
+        wickr_buffer_t *serialized = wickr_identity_chain_serialize_private(test_chain);
+        SHOULD_NOT_BE_NULL(serialized);
+        
+        wickr_identity_chain_t *deserialized = wickr_identity_chain_create_from_buffer(serialized, &engine);
+        SHOULD_NOT_BE_NULL(deserialized);
+        
+        SHOULD_BE_TRUE(wickr_buffer_is_equal(deserialized->root->identifier, test_chain->root->identifier, NULL));
+        SHOULD_BE_TRUE(wickr_buffer_is_equal(deserialized->root->sig_key->pub_data, test_chain->root->sig_key->pub_data, NULL));
+        SHOULD_BE_TRUE(wickr_buffer_is_equal(deserialized->root->sig_key->pri_data, test_chain->root->sig_key->pri_data, NULL));
+        SHOULD_EQUAL(deserialized->root->type, test_chain->root->type);
+        
+        SHOULD_BE_TRUE(wickr_buffer_is_equal(deserialized->node->identifier, test_chain->node->identifier, NULL));
+        SHOULD_BE_TRUE(wickr_buffer_is_equal(deserialized->node->sig_key->pub_data, test_chain->node->sig_key->pub_data, NULL));
+        SHOULD_BE_TRUE(wickr_buffer_is_equal(deserialized->node->signature->sig_data, test_chain->node->signature->sig_data, NULL));
+        SHOULD_BE_TRUE(wickr_buffer_is_equal(deserialized->node->sig_key->pri_data, test_chain->node->sig_key->pri_data, NULL));
+        
+        SHOULD_EQUAL(deserialized->node->type, test_chain->node->type);
+        
+        wickr_buffer_destroy(&serialized);
+        wickr_identity_chain_destroy(&deserialized);
+    }
+    END_IT
+    
+    IT("should retest validity with each call")
+    {
+        /* Invalid -> Valid case */
+        test_chain->status = IDENTITY_CHAIN_STATUS_INVALID;
+        SHOULD_BE_TRUE(wickr_identity_chain_validate(test_chain, &engine));
+        SHOULD_EQUAL(test_chain->status, IDENTITY_CHAIN_STATUS_VALID);
+        
+        /* Valid -> Invalid case */
+        
+        wickr_identity_chain_t *test_chain_copy = wickr_identity_chain_copy(test_chain);
+        wickr_ec_key_destroy(&test_chain_copy->root->sig_key);
+        test_chain_copy->root->sig_key = engine.wickr_crypto_engine_ec_rand_key(EC_CURVE_NIST_P521);
+        
+        SHOULD_BE_FALSE(wickr_identity_chain_validate(test_chain_copy, &engine));
+        SHOULD_EQUAL(test_chain_copy->status, IDENTITY_CHAIN_STATUS_INVALID);
+        
+        wickr_identity_chain_destroy(&test_chain_copy);
+    }
+    END_IT;
+    
     IT("can be validated")
     {
         SHOULD_BE_TRUE(wickr_identity_chain_validate(test_chain, &engine));
-        SHOULD_EQUAL(test_chain->status, IDENTITY_CHAIN_STATUS_UNKNOWN);
+        SHOULD_EQUAL(test_chain->status, IDENTITY_CHAIN_STATUS_VALID);
         
         wickr_buffer_t *identifier = engine.wickr_crypto_engine_crypto_random(IDENTIFIER_LEN);
         wickr_ec_key_t *sig_key = engine.wickr_crypto_engine_ec_rand_key(EC_CURVE_NIST_P521);
@@ -237,7 +296,7 @@ DESCRIBE(identity_chain, "identity chain tests")
         test_chain->node = bad_node;
         
         SHOULD_BE_FALSE(wickr_identity_chain_validate(test_chain, &engine));
-        SHOULD_EQUAL(test_chain->status, IDENTITY_CHAIN_STATUS_UNKNOWN);
+        SHOULD_EQUAL(test_chain->status, IDENTITY_CHAIN_STATUS_INVALID);
     }
     END_IT
     

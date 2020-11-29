@@ -5,7 +5,7 @@ var wickrcrypto = require('../../../../../node/lib/wickrcrypto')
 
 function generateTestNode(identity) {
 
-    var testNode = identity.genNode()
+    var testNode = identity.genNode(null)
 
     expect(testNode).to.be.a("object")
 
@@ -13,6 +13,13 @@ function generateTestNode(identity) {
     expect(testNode.signature).to.be.a("object")
 
     return testNode
+}
+
+function generateTestIdentityChain(name) {
+    const sigKey = wickrcrypto.CryptoEngine.randEcKey(wickrcrypto.ECCurve.p521())
+    const root = wickrcrypto.Identity.fromValues(wickrcrypto.IDENTITY_TYPE_ROOT, Buffer.from(name), sigKey, null)
+    const node = root.genNode(null)
+    return wickrcrypto.IdentityChain.fromIdentities(root, node)
 }
 
 describe ("Identity Tests", function() {
@@ -88,4 +95,27 @@ describe ("Identity Tests", function() {
         expect(restored.node.identifier).to.eql(testChain.node.identifier)
     })
 
+    it("should be able to serialize an identity chain with private key data", function() {
+
+        // Serialize and deserialize an identity chain
+        var testNode = generateTestNode(testIdentity)
+        var testChain = wickrcrypto.IdentityChain.fromIdentities(testIdentity, testNode)
+        expect(testChain).to.be.a("object")
+
+        var serialized = testChain.serializePrivate()
+        expect(serialized).to.be.a("object")
+
+        var restored = wickrcrypto.IdentityChain.fromBuffer(serialized)
+        expect(restored).to.be.a("object")
+
+        //Test some properties to ensure proper wrapping, this is heavily tested in the wickr-crypto-c library tests
+        expect(restored.root.identifier).to.eql(testChain.root.identifier)
+        expect(restored.node.identifier).to.eql(testChain.node.identifier)
+
+        expect(restored.root.sigKey.priData).to.eql(testChain.root.sigKey.priData)
+        expect(restored.node.sigKey.priData).to.eql(testChain.node.sigKey.priData)
+    })
+
 })
+
+module.exports.generateTestIdentityChain = generateTestIdentityChain

@@ -15,7 +15,7 @@
 }
 #elif defined(SWIGJAVASCRIPT)
 %typemap(ret) SWIGTYPE *sig_key, SWIGTYPE *signature, SWIGTYPE *root, SWIGTYPE *node {
-  if (jsresult->IsObject() && jsresult->ToObject()->Set(SWIGV8_CURRENT_CONTEXT(), SWIGV8_SYMBOL_NEW("parent"), info.Holder()).IsNothing()) {
+  if (jsresult->IsObject() && jsresult->ToObject(v8::Isolate::GetCurrent())->Set(SWIGV8_CURRENT_CONTEXT(), SWIGV8_SYMBOL_NEW("parent"), info.Holder()).IsNothing()) {
     SWIG_exception_fail(SWIG_ERROR, "Could not set parent object for getter");
   }
 }
@@ -35,6 +35,7 @@
 %ignore wickr_identity_chain_validate;
 %ignore wickr_identity_chain_destroy;
 %ignore wickr_identity_chain_serialize;
+%ignore wickr_identity_chain_serialize_private;
 %ignore wickr_identity_chain_create_from_buffer;
 %ignore wickr_identity_get_fingerprint;
 %ignore wickr_identity_get_bilateral_fingerprint;
@@ -67,9 +68,9 @@
  	return wickr_identity_sign($self, &engine, data);
  }
 
- wickr_identity_t *gen_node() {
+ wickr_identity_t *gen_node(const wickr_buffer_t *identifier) {
  	wickr_crypto_engine_t engine = wickr_crypto_engine_get_default();
- 	return wickr_node_identity_gen(&engine, $self);
+ 	return wickr_node_identity_gen(&engine, $self, identifier);
  }
 
  static wickr_identity_t *from_values(wickr_identity_type type, wickr_buffer_t *identifier, wickr_ec_key_t *sig_key, wickr_ecdsa_result_t *signature) {
@@ -105,6 +106,7 @@
  %newobject from_identities;
  %newobject from_buffer;
  %newobject serialize;
+ %newobject serialize_private;
 
  static wickr_identity_chain_t *from_buffer(const wickr_buffer_t *data) {
      const wickr_crypto_engine_t engine = wickr_crypto_engine_get_default();
@@ -112,6 +114,7 @@
  }
 
  wickr_buffer_t *serialize();
+ wickr_buffer_t *serialize_private();
 
  static wickr_identity_chain_t *from_identities(wickr_identity_t *root, wickr_identity_t *node) {
  	wickr_identity_t *root_copy = wickr_identity_copy(root);

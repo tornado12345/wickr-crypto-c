@@ -5,7 +5,7 @@
 
 wickr_identity_t *wickr_identity_create(wickr_identity_type type, wickr_buffer_t *identifier, wickr_ec_key_t *sig_key, wickr_ecdsa_result_t *signature)
 {
-    if (!identifier || identifier->length != IDENTIFIER_LEN || !sig_key) {
+    if (!identifier || identifier->length >= MAX_IDENTIFIER_LEN || !sig_key) {
         return NULL;
     }
     
@@ -32,7 +32,7 @@ wickr_ecdsa_result_t *wickr_identity_sign(const wickr_identity_t *identity, cons
     return engine->wickr_crypto_engine_ec_sign(identity->sig_key, data, DIGEST_SHA_512);
 }
 
-wickr_identity_t *wickr_node_identity_gen(const wickr_crypto_engine_t *engine, const wickr_identity_t *root_identity)
+wickr_identity_t *wickr_node_identity_gen(const wickr_crypto_engine_t *engine, const wickr_identity_t *root_identity, const wickr_buffer_t *identifier)
 {
     if (!engine || !root_identity || root_identity->type != IDENTITY_TYPE_ROOT) {
         return NULL;
@@ -51,20 +51,20 @@ wickr_identity_t *wickr_node_identity_gen(const wickr_crypto_engine_t *engine, c
         return NULL;
     }
     
-    wickr_buffer_t *rand_id = engine->wickr_crypto_engine_crypto_random(IDENTIFIER_LEN);
+    wickr_buffer_t *node_identifier = identifier ? wickr_buffer_copy(identifier) : engine->wickr_crypto_engine_crypto_random(IDENTIFIER_LEN);
     
-    if (!rand_id) {
+    if (!node_identifier) {
         wickr_ec_key_destroy(&node_sig_key);
         wickr_ecdsa_result_destroy(&node_sig);
         return NULL;
     }
     
-    wickr_identity_t *node_identity = wickr_identity_create(IDENTITY_TYPE_NODE, rand_id, node_sig_key, node_sig);
+    wickr_identity_t *node_identity = wickr_identity_create(IDENTITY_TYPE_NODE, node_identifier, node_sig_key, node_sig);
     
     if (!node_identity) {
         wickr_ec_key_destroy(&node_sig_key);
         wickr_ecdsa_result_destroy(&node_sig);
-        wickr_buffer_destroy(&rand_id);
+        wickr_buffer_destroy(&node_identifier);
     }
     
     return node_identity;
@@ -247,35 +247,61 @@ wickr_identity_chain_t *wickr_identity_chain_copy(const wickr_identity_chain_t *
         return NULL;
     }
     
-    wickr_identity_chain_t *copy = wickr_identity_chain_create(root_copy, node_copy);
+    wickr_buffer_t *cache_copy = wickr_buffer_copy(source->_status_cache);
     
-    if (!copy) {
+    if (source->_status_cache && !cache_copy) {
         wickr_identity_destroy(&root_copy);
         wickr_identity_destroy(&node_copy);
         return NULL;
     }
     
+    wickr_identity_chain_t *copy = wickr_identity_chain_create(root_copy, node_copy);
+    
+    if (!copy) {
+        wickr_identity_destroy(&root_copy);
+        wickr_identity_destroy(&node_copy);
+        wickr_buffer_destroy(&cache_copy);
+        return NULL;
+    }
+    
+    copy->_status_cache = cache_copy;
     copy->status = source->status;
     
     return copy;
 }
 
-bool wickr_identity_chain_validate(const wickr_identity_chain_t *chain, const wickr_crypto_engine_t *engine)
+bool wickr_identity_chain_validate(wickr_identity_chain_t *chain, const wickr_crypto_engine_t *engine)
 {
     if (!chain || !engine) {
         return false;
     }
     
-    return engine->wickr_crypto_engine_ec_verify(chain->node->signature, chain->root->sig_key, chain->node->sig_key->pub_data);
+    /* Check to see if we need to recalculate the status of the chain */
+    if (wickr_identity_chain_has_valid_cache(chain, engine)) {
+        return chain->status == IDENTITY_CHAIN_STATUS_VALID;
+    }
+    
+    bool is_valid = engine->wickr_crypto_engine_ec_verify(chain->node->signature, chain->root->sig_key, chain->node->sig_key->pub_data);
+    
+    chain->status = is_valid ? IDENTITY_CHAIN_STATUS_VALID : IDENTITY_CHAIN_STATUS_INVALID;
+    wickr_identity_chain_update_status_cache(chain, engine);
+    
+    return is_valid;
 }
 
-wickr_buffer_t *wickr_identity_chain_serialize(const wickr_identity_chain_t *identity_chain)
+static wickr_buffer_t *__wickr_identity_chain_serialize(const wickr_identity_chain_t *identity_chain, bool include_private)
 {
     if (!identity_chain) {
         return NULL;
     }
     
-    Wickr__Proto__IdentityChain *proto_identity = wickr_identity_chain_to_proto(identity_chain);
+    Wickr__Proto__IdentityChain *proto_identity = NULL;
+    
+    if (include_private) {
+        proto_identity = wickr_identity_chain_to_private_proto(identity_chain);
+    } else {
+        proto_identity = wickr_identity_chain_to_proto(identity_chain);
+    }
     
     if (!proto_identity) {
         return NULL;
@@ -294,6 +320,16 @@ wickr_buffer_t *wickr_identity_chain_serialize(const wickr_identity_chain_t *ide
     wickr_identity_chain_proto_free(proto_identity);
     
     return packed_buffer;
+}
+
+wickr_buffer_t *wickr_identity_chain_serialize(const wickr_identity_chain_t *identity_chain)
+{
+    return __wickr_identity_chain_serialize(identity_chain, false);
+}
+
+wickr_buffer_t *wickr_identity_chain_serialize_private(const wickr_identity_chain_t *identity_chain)
+{
+    return __wickr_identity_chain_serialize(identity_chain, true);
 }
 
 wickr_identity_chain_t *wickr_identity_chain_create_from_buffer(const wickr_buffer_t *buffer, const wickr_crypto_engine_t *engine)
@@ -322,6 +358,8 @@ void wickr_identity_chain_destroy(wickr_identity_chain_t **chain)
     
     wickr_identity_destroy(&(*chain)->node);
     wickr_identity_destroy(&(*chain)->root);
+    wickr_buffer_destroy(&(*chain)->_status_cache);
+    
     wickr_free(*chain);
     *chain = NULL;
 }

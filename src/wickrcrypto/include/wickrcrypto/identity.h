@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2018 Wickr Inc.  All rights reserved.
+ * Copyright © 2012-2020 Wickr Inc.  All rights reserved.
  *
  * This code is being released for EDUCATIONAL, ACADEMIC, AND CODE REVIEW PURPOSES
  * ONLY.  COMMERCIAL USE OF THE CODE IS EXPRESSLY PROHIBITED.  For additional details,
@@ -39,9 +39,14 @@ extern "C" {
  */
 
 /** @ingroup wickr_identity
- Identifiers should be 32 bytes on the Wickr system, this requirement could drop or change in the future 
+ By default identifiers are 32 bytes on the Wickr system, however this library will allow for any identifier with length less than MAX_IDENTIFIER_LEN
  */
 #define IDENTIFIER_LEN 32
+
+/** @ingroup wickr_identity
+ Maximum length for an identifier
+*/
+#define MAX_IDENTIFIER_LEN 128
 
 
 /* Define ROOT and NODE identity types */
@@ -105,12 +110,14 @@ typedef struct wickr_identity wickr_identity_t;
  an identity of type 'IDENTITY_TYPE_ROOT'
  @var wickr_identity_chain::node
  an identity of type 'IDENTITY_TYPE_NODE'
- 
+ @var wickr_identity_chain::_status_cache
+ private cache of status information used for performance optimizations
  */
 struct wickr_identity_chain {
     wickr_identity_chain_status status;
     wickr_identity_t *root;
     wickr_identity_t *node;
+    wickr_buffer_t *_status_cache;
 };
 
 typedef struct wickr_identity_chain wickr_identity_chain_t;
@@ -150,9 +157,10 @@ wickr_ecdsa_result_t *wickr_identity_sign(const wickr_identity_t *identity, cons
 
  @param engine a crypto engine supporting random Elliptic Curve Key generation
  @param root_identity a root identity that supports generating signatures with a private signing key
+ @param identifier to use for new node identity, if NULL a random identifier of `IDENTIFIER_LEN` bytes will be used
  @return a newly allocated node identity signing by root identity 'root_identity'. The 'identifier' property of the node is generated at random to be 'IDENTIFIER_LEN' in length (currently 32 bytes). NULL if root_identity is not a root, or it does not contain a private signing key
  */
-wickr_identity_t *wickr_node_identity_gen(const wickr_crypto_engine_t *engine, const wickr_identity_t *root_identity);
+wickr_identity_t *wickr_node_identity_gen(const wickr_crypto_engine_t *engine, const wickr_identity_t *root_identity, const wickr_buffer_t *identifier);
 
 /**
  
@@ -246,6 +254,18 @@ wickr_buffer_t *wickr_identity_chain_serialize(const wickr_identity_chain_t *ide
  
  @ingroup wickr_identity_chain
  
+ Serialize an identity chain, and include private key components
+ 
+ @param identity_chain the identity chain to serialize
+ @return a buffer containing a serialized representation of 'identity_chain' including private keys,
+ or NULL if private keys are not found
+ */
+wickr_buffer_t *wickr_identity_chain_serialize_private(const wickr_identity_chain_t *identity_chain);
+
+/**
+ 
+ @ingroup wickr_identity_chain
+ 
  Create an identity chain from a buffer that was created with 'wickr_identity_chain_serialize'
  
  @param buffer the buffer that contains a serialized representation of an identity chain
@@ -287,7 +307,7 @@ wickr_identity_chain_t *wickr_identity_chain_copy(const wickr_identity_chain_t *
  @param engine a crypto engine that supports verifying signatures
  @return true if the 'signature' of the 'node' property of 'chain' can be properly verified with the public 'sig_key' from the 'root' property of 'chain'
  */
-bool wickr_identity_chain_validate(const wickr_identity_chain_t *chain, const wickr_crypto_engine_t *engine);
+bool wickr_identity_chain_validate(wickr_identity_chain_t *chain, const wickr_crypto_engine_t *engine);
 
 /**
  

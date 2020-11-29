@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "WickrCryptoC"
-  s.version      = "1.11.0"
+  s.version      = "1.13.9"
   s.summary      = "An implementation of the wickr protocol, written in C"
 
   # This description is used to generate tags and improve search results.
@@ -65,7 +65,7 @@ Pod::Spec.new do |s|
   #
 
   # s.platform     = :ios
-  s.platform     = :ios, "9.0"
+  s.platform     = :ios, "10.0"
 
   #  When using multiple platforms
   # s.ios.deployment_target = "8.0"
@@ -90,7 +90,7 @@ Pod::Spec.new do |s|
   #  Not including the public_header_files will make all headers public.
   #
 
-  s.source_files  = "src/**/*.{h,c}", "output_fat/include/**/*.h", "output_fat/lib/libbcrypt.a", "output_fat/lib/libscrypt.a", "output_fat/lib/libprotobuf-c.a", "build_device/third-party/openssl/1.0.2-fips/lib/fips_premain.c"
+  s.source_files  = "src/**/*.{h,c}", "output_fat/include/**/*.h", "output_fat/lib/libbcrypt.a", "output_fat/lib/libscrypt.a", "output_fat/lib/libprotobuf-c.a", "build_device/third-party/openssl/1.0.2-fips/fips_output/lib/fips_premain.c"
   s.preserve_paths = "src/**/*.{h,c}", "output_fat/**/*", "build_device/**/*"
   s.private_header_files = "src/protobuf/gen/*.h", "src/wickrcrypto/include/wickrcrypto/private/*.h", "src/wickrcrypto/include/wickrcrypto/openssl_*suite.h", "output_fat/include/**/*.h"
   

@@ -3,19 +3,22 @@
 %include dev_info.i
 %include identity.i
 %include storage_keys.i
+%include payload.i
+%include packet_meta.i
+%include message_encoder.i
 
 %{
 #include <wickrcrypto/wickr_ctx.h>
 %}
 
 #if defined(SWIGJAVA)
-%typemap(javaout) SWIGTYPE *dev_info, SWIGTYPE *id_chain, SWIGTYPE *storage_keys, SWIGTYPE *packet_header_key, SWIGTYPE *recovery_key, SWIGTYPE *ctx, SWIGTYPE *root_keys, SWIGTYPE *recovery_key, SWIGTYPE *packet, SWIGTYPE *sender, SWIGTYPE *parse_result, SWIGTYPE *packet_key, SWIGTYPE *encoded_packet, SWIGTYPE *meta, SWIGTYPE *signature, SWIGTYPE *header, SWIGTYPE *key_exchange, SWIGTYPE *enc_payload, SWIGTYPE *payload_key, SWIGTYPE *decrypted_payload {
+%typemap(javaout) SWIGTYPE *dev_info, SWIGTYPE *id_chain, SWIGTYPE *storage_keys, SWIGTYPE *packet_header_key, SWIGTYPE *recovery_key, SWIGTYPE *ctx, SWIGTYPE *root_keys, SWIGTYPE *recovery_key, SWIGTYPE *packet, SWIGTYPE *sender, SWIGTYPE *parse_result, SWIGTYPE *packet_key, SWIGTYPE *encoded_packet, SWIGTYPE *signature, SWIGTYPE *header, SWIGTYPE *key_exchange, SWIGTYPE *enc_payload, SWIGTYPE *payload_key, SWIGTYPE *decrypted_payload {
 	long cPtr = $jnicall;
     return (cPtr == 0) ? null : new $javaclassname(cPtr, $owner, this);
 }
 #elif defined(SWIGJAVASCRIPT)
-%typemap(ret) SWIGTYPE *dev_info, SWIGTYPE *id_chain, SWIGTYPE *storage_keys, SWIGTYPE *packet_header_key, SWIGTYPE *recovery_key, SWIGTYPE *ctx, SWIGTYPE *root_keys, SWIGTYPE *recovery_key, SWIGTYPE *packet, SWIGTYPE *sender, SWIGTYPE *parse_result, SWIGTYPE *packet_key, SWIGTYPE *encoded_packet, SWIGTYPE *meta, SWIGTYPE *signature, SWIGTYPE *header, SWIGTYPE *key_exchange, SWIGTYPE *enc_payload, SWIGTYPE *payload_key, SWIGTYPE *decrypted_payload {
-    if (jsresult->IsObject() && jsresult->ToObject()->Set(SWIGV8_CURRENT_CONTEXT(), SWIGV8_SYMBOL_NEW("parent"), info.Holder()).IsNothing()) {
+%typemap(ret) SWIGTYPE *dev_info, SWIGTYPE *id_chain, SWIGTYPE *storage_keys, SWIGTYPE *packet_header_key, SWIGTYPE *recovery_key, SWIGTYPE *ctx, SWIGTYPE *root_keys, SWIGTYPE *recovery_key, SWIGTYPE *packet, SWIGTYPE *sender, SWIGTYPE *parse_result, SWIGTYPE *packet_key, SWIGTYPE *encoded_packet, SWIGTYPE *signature, SWIGTYPE *header, SWIGTYPE *key_exchange, SWIGTYPE *enc_payload, SWIGTYPE *payload_key, SWIGTYPE *decrypted_payload {
+    if (jsresult->IsObject() && jsresult->ToObject(v8::Isolate::GetCurrent())->Set(SWIGV8_CURRENT_CONTEXT(), SWIGV8_SYMBOL_NEW("parent"), info.Holder()).IsNothing()) {
         SWIG_exception_fail(SWIG_ERROR, "Could not set parent object for getter");
     }
 }
@@ -46,8 +49,6 @@
 %ignore wickr_ctx_ephemeral_keypair_gen;
 %ignore wickr_ctx_packet_create;
 %ignore wickr_ctx_packet_destroy;
-%ignore wickr_ctx_encode_create;
-%ignore wickr_ctx_encode_destroy;
 %ignore wickr_ctx_encode_packet;
 %ignore wickr_ctx_parse_packet;
 %ignore wickr_ctx_parse_packet_no_decode;
@@ -56,18 +57,12 @@
 %ignore wickr_ctx_export;
 %ignore wickr_ctx_import;
 %ignore wickr_ctx_create_from_buffer;
-%ignore wickr_packet_meta_create;
-%ignore wickr_packet_meta_copy;
-%ignore wickr_packet_meta_destroy;
 %ignore wickr_key_exchange_create_with_packet_key;
 %ignore wickr_key_exchange_create_with_data;
 %ignore wickr_key_exchange_derive_packet_key;
 %ignore wickr_key_exchange_derive_data;
 %ignore wickr_packet_header_encrypt;
 %ignore wickr_packet_header_create_from_cipher;
-%ignore wickr_payload_create;
-%ignore wickr_payload_copy;
-%ignore wickr_payload_destroy;
 %ignore wickr_key_exchange_set_encrypt;
 %ignore wickr_key_exchange_set_create_from_cipher;
 %ignore wickr_packet_create;
@@ -90,24 +85,6 @@
 %include "wickrcrypto/wickr_ctx.h"
 %include "wickrcrypto/protocol.h"
 
-%extend struct wickr_ephemeral_info {
-	
-	%newobject from_values;
-
-	static wickr_ephemeral_info_t *from_values(uint64_t ttl, uint64_t bor) {
-		wickr_ephemeral_info_t *info = (wickr_ephemeral_info_t *)malloc(sizeof(wickr_ephemeral_info_t));
-		if (!info) {
-			return NULL;
-		}
-		info->ttl = ttl;
-		info->bor = bor;
-		return info;
-	}
-	~wickr_ephemeral_info() {
-		free($self);
-	}
-}
-
 %extend struct wickr_packet {
 	~wickr_packet() {
 		wickr_packet_destroy(&$self);
@@ -118,37 +95,6 @@
 
 	wickr_buffer_t *serialize();
 	static wickr_packet_t *create_from_buffer(const wickr_buffer_t *buffer);
-}
-
-%extend struct wickr_packet_meta {
-	%newobject from_values;
-	static wickr_packet_meta_t *from_values(wickr_ephemeral_info_t ephemerality_settings, wickr_buffer_t *channel_tag, uint16_t content_type) {
-		return wickr_packet_meta_create(ephemerality_settings, channel_tag, content_type);
-	}
-	~wickr_packet_meta() {
-		wickr_packet_meta_destroy(&$self);
-	}
-}
-
-%extend struct wickr_payload {
-
-	%newobject from_values;
-
-	static wickr_payload_t *from_values(wickr_packet_meta_t *meta, wickr_buffer_t *body) {
-		wickr_packet_meta_t *meta_copy = wickr_packet_meta_copy(meta);
-
-		wickr_payload_t *payload = wickr_payload_create(meta_copy, body);
-
-		if (!payload) {
-			wickr_packet_meta_destroy(&meta_copy);
-		}
-
-		return payload;
-	}
-
-	~wickr_payload() {
-		wickr_payload_destroy(&$self);
-	}
 }
 
 %extend struct wickr_ctx {
@@ -240,7 +186,7 @@
 	wickr_cipher_result_t *cipher_remote(const wickr_buffer_t *plaintext);
 	wickr_buffer_t *decipher_remote(const wickr_cipher_result_t *cipher_text);
 	wickr_ephemeral_keypair_t *ephemeral_keypair_gen(uint64_t key_id);
-	wickr_ctx_encode_t *encode_packet(const wickr_payload_t *payload, const wickr_node_array_t *nodes);
+	wickr_encoder_result_t *encode_packet(const wickr_payload_t *payload, const wickr_node_array_t *nodes);
     wickr_ctx_packet_t *parse_packet_no_decode(const wickr_buffer_t *packet_buffer, const wickr_identity_chain_t *sender);
     wickr_ctx_packet_t *parse_packet(const wickr_buffer_t *packet_buffer, const wickr_identity_chain_t *sender);
     wickr_decode_result_t *decode_packet(const wickr_ctx_packet_t *packet, wickr_ec_key_t *keypair);
